@@ -1,6 +1,6 @@
 # Seq2Seq EN→FR — BiLSTM + Cross-Attention
 
-Implémentation pédagogique d'un modèle de traduction anglais → français en PyTorch.
+Implémentation  d'un modèle de traduction anglais → français en PyTorch.
 
 ## Architecture
 
