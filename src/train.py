@@ -35,8 +35,8 @@ def train_epoch(
 
         optimizer.zero_grad()
 
-        logits = model(src, src_lengths, trg[:-1], trg_lengths - 1)
-        loss   = criterion(logits, trg[1:])
+        logits, _ = model(src, src_lengths, trg[:-1], trg_lengths - 1)
+        loss       = criterion(logits, trg[1:])
 
         loss.backward()
         nn.utils.clip_grad_norm_(model.parameters(), clip)
@@ -64,8 +64,8 @@ def evaluate(
     for src, src_lengths, trg, trg_lengths in loader:
         src, trg = src.to(device), trg.to(device)
 
-        logits = model(src, src_lengths, trg[:-1], trg_lengths - 1)
-        loss   = criterion(logits, trg[1:])
+        logits, _ = model(src, src_lengths, trg[:-1], trg_lengths - 1)
+        loss       = criterion(logits, trg[1:])
 
         total_loss += loss.item()
 

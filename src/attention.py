@@ -39,11 +39,11 @@ class CrossAttention(nn.Module):
             context : (trg_len, batch, hidden)
         """
 
-        context, _ = self.mha(
+        context, alpha = self.mha(
             query, enc_outputs, enc_outputs,
             key_padding_mask=key_padding_mask,
-            need_weights=False,
+            need_weights=True,
         )
         # Add & Norm
         out = self.layernorm(query + self.dropout(context))
-        return out
+        return out, alpha

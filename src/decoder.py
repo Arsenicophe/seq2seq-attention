@@ -48,33 +48,38 @@ class Decoder(nn.Module):
         enc_outputs         : torch.Tensor,            # (src_len, batch, hidden_dim)
         h1                  = None,                    # (n_layers, batch, hidden_dim)  état initial LSTM 1
         c1                  = None,                    # (n_layers, batch, hidden_dim)
+        h2                  = None,                    # (n_layers, batch, hidden_dim)  état initial LSTM 2
+        c2                  = None,                    # (n_layers, batch, hidden_dim)
         src_key_padding_mask: torch.Tensor | None = None,  # (batch, src_len)
     ):
         """
         Returns:
-            logits     : (trg_len, batch, vocab_size)
-            (h1, c1)   : état final LSTM 1  — seulement si return_state=True
+            logits : (trg_len, batch, vocab_size)
+            alpha  : (batch, trg_len, src_len)   — poids d'attention
+            (h1, c1) : état final LSTM 1  — seulement si return_state=True
         """
         trg_len = trg.size(0)
 
         x = self.dropout(self.embedding(trg))                   # (trg_len, batch, embed_dim)
 
         # LSTM 1 — lit les tokens cibles, produit des représentations contextualisées
+        init1   = (h1, c1) if h1 is not None else None
         packed1 = pack_padded_sequence(x, trg_lengths.cpu(), enforce_sorted=False)
-        packed_out1, (h1, c1) = self.lstm1(packed1, (h1, c1))
+        packed_out1, (h1, c1) = self.lstm1(packed1, init1)
         outputs1, _ = pad_packed_sequence(packed_out1, total_length=trg_len)
 
         # Cross-Attention — chaque position cible consulte toute la source
-        contexts = self.attention(outputs1, enc_outputs,
-                                  key_padding_mask=src_key_padding_mask)
+        contexts, alpha = self.attention(outputs1, enc_outputs,
+                                         key_padding_mask=src_key_padding_mask)
 
         # LSTM 2 — intègre le contexte source dans la représentation cible
+        init2   = (h2, c2) if h2 is not None else None
         packed2 = pack_padded_sequence(contexts, trg_lengths.cpu(), enforce_sorted=False)
-        packed_out2, _ = self.lstm2(packed2)
+        packed_out2, _ = self.lstm2(packed2, init2)
         outputs2, _ = pad_packed_sequence(packed_out2, total_length=trg_len)
 
         logits = self.fc_out(outputs2)                          # (trg_len, batch, vocab_size)
 
         if self.return_state:
-            return logits, (h1, c1)
-        return logits
+            return logits, alpha, (h1, c1)
+        return logits, alpha
