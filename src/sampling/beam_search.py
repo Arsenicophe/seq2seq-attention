@@ -81,11 +81,11 @@ def beam_search_decode(
     model.decoder.return_state = True
 
     # 1. Encoder — passe unique, enc_outputs constants pour tous les beams
-    enc_outputs          = model.encoder(src, src_length)             # (src_len, 1, H)
-    src_key_padding_mask = (src == PAD_IDX).T.to(device)             # (1, src_len)
+    enc_outputs, h_n, c_n = model.encoder(src, src_length)           # (src_len, 1, H)
+    src_key_padding_mask   = (src == PAD_IDX).T.to(device)           # (1, src_len)
 
-    # 2. Init — un seul beam au départ
-    beams: List[Beam]    = [Beam(tokens=[SOS_IDX], log_prob=0.0, h=None, c=None)]
+    # 2. Init — état encodeur tranféré au premier beam
+    beams: List[Beam]    = [Beam(tokens=[SOS_IDX], log_prob=0.0, h=h_n, c=c_n)]
     finished: List[Beam] = []
 
     # 3. Boucle sur les pas de temps
