@@ -31,8 +31,13 @@ class Encoder(nn.Module):
         """
         x = self.dropout(self.embedding(src))
 
-        packed     = pack_padded_sequence(x, src_lengths.cpu(), enforce_sorted=False)
-        packed_out, _ = self.rnn(packed)
+        packed = pack_padded_sequence(x, src_lengths.cpu(), enforce_sorted=False)
+        packed_out, (h_n, c_n) = self.rnn(packed)
         enc_outputs, _ = pad_packed_sequence(packed_out, total_length=src.size(0))
 
-        return self.projection(enc_outputs)
+        # BiLSTM : h_n shape (n_layers*2, batch, hidden)
+        # On fusionne forward + backward pour chaque couche → (n_layers, batch, hidden)
+        h_n = self.projection(torch.cat([h_n[0::2], h_n[1::2]], dim=-1))
+        c_n = self.projection(torch.cat([c_n[0::2], c_n[1::2]], dim=-1))
+
+        return self.projection(enc_outputs), h_n, c_n

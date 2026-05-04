@@ -29,10 +29,11 @@ class Seq2Seq(nn.Module):
         Returns:
             logits : (trg_len, batch, vocab_size)
         """
-        enc_outputs = self.encoder(src, src_lengths)
+        enc_outputs, h_n, c_n = self.encoder(src, src_lengths)
 
         # Masque (batch, src_len) — True aux positions PAD, ignorées par le MHA
         src_key_padding_mask = (src == PAD_IDX).T.to(self.device)
 
-        return self.decoder(trg, trg_lengths, enc_outputs,
+        # h_n, c_n initialisent LSTM 1 du décodeur (transfert encodeur → décodeur)
+        return self.decoder(trg, trg_lengths, enc_outputs, h_n, c_n,
                             src_key_padding_mask=src_key_padding_mask)
