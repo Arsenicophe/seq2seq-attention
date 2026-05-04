@@ -12,7 +12,7 @@ Points clés :
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.cuda.amp import autocast, GradScaler
+from torch.amp import autocast, GradScaler
 from seq2seq import Seq2Seq
 
 
