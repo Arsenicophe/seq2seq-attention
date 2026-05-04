@@ -2,7 +2,7 @@ data:
   n_train: 50_000
   min_freq: 2
   max_len: 50
-  batch_size: 32
+  batch_size: 64
 
 # clés = paramètres exacts de Encoder.__init__ (sauf vocab_size, fourni par le vocab)
 encoder:
